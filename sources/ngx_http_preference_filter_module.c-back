@@ -1,0 +1,304 @@
+#include "ngx_http_preference_filter_module.h"
+
+typedef struct {
+        ngx_flag_t  enable;
+} ngx_http_preference_conf_t;
+
+typedef struct {
+    ngx_buf_t           *data;
+    ngx_chain_t         *in;
+
+} ngx_http_preference_ctx_t;
+
+
+static void *ngx_http_preference_create_loc_conf(ngx_conf_t *cf);
+static char *ngx_http_preference_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
+
+
+static ngx_command_t  ngx_http_preference_filter_commands[] = {
+        {
+                ngx_string("preference"),
+                NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_FLAG,
+                ngx_conf_set_flag_slot, /*Наверное это и есть колбэк функция для обработки директивы*/
+//		ngx_http_preference_set,
+                NGX_HTTP_LOC_CONF_OFFSET,
+                offsetof(ngx_http_preference_conf_t, enable),
+                NULL
+        },
+        ngx_null_command
+    };
+
+
+
+static ngx_http_output_header_filter_pt  ngx_http_next_header_filter;
+static ngx_http_output_body_filter_pt    ngx_http_next_body_filter;
+
+
+static ngx_int_t ngx_http_preference_header_filter(ngx_http_request_t *r);
+static ngx_int_t ngx_http_preference_header_filter(ngx_http_request_t *r){
+
+
+//    return ngx_http_next_header_filter(r);
+
+
+
+ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "http preference header filter in \"%V?%V\"", &r->uri, &r->args);
+        r->headers_out.status =  NGX_HTTP_OK;
+
+     return ngx_http_next_header_filter(r);
+//    time_t  if_modified_since;
+
+//    if_modified_since = ngx_http_parse_time(r->headers_in.if_modified_since->value.data,
+//    r->headers_in.if_modified_since->value.len);
+
+//    /* step 1: decide whether to operate */
+//    if (if_modified_since != NGX_ERROR &&
+//        if_modified_since == r->headers_out.last_modified_time) {
+
+//  /* step 2: operate on the header */
+//        r->headers_out.status = NGX_HTTP_NOT_MODIFIED;
+//        r->headers_out.content_type.len = 0;
+//        ngx_http_clear_content_length(r);
+//        ngx_http_clear_accept_ranges(r);
+//    }
+//    return ngx_http_next_header_filter(r);
+//    /* step 3: call the next filter */
+//    return NGX_OK;
+//    return ngx_http_next_header_filter(r);
+}
+
+
+static ngx_int_t ngx_http_preference_body_filter(ngx_http_request_t *r, ngx_chain_t *in);
+/*
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "http preference body filter in \"%V?%V\"", &r->uri, &r->args);
+                   ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http preference body filter chain_link->buf->last_buf");
+
+*/
+
+static ngx_int_t ngx_http_preference_body_filter(ngx_http_request_t *r, ngx_chain_t *in){
+
+    //return ngx_http_next_body_filter(r, in);
+
+
+    ngx_chain_t *chain_link;
+    int chain_contains_last_buffer = 0;
+    FILE                            *h;
+    ngx_http_preference_ctx_t       *ctx;
+    ngx_http_preference_conf_t  *conf;
+
+    h = fopen( "/tmp/kk2.txt", "a" );
+    fprintf(h, "\n\n\n\n==================================================\n");
+    fclose(h);
+
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_preference_filter_module);
+
+//    if (ctx == NULL
+//        || (in == NULL))
+//    {
+//        return ngx_http_next_body_filter(r, in);
+//    }
+
+
+     /* add the incoming chain to the chain ctx->in */
+
+     /* add the incoming chain to the chain ctx->in */
+
+//     if (in) {
+//         if (ngx_chain_add_copy(r->pool, &ctx->in, in) != NGX_OK) {
+//             return NGX_ERROR;
+//         }
+//     }
+
+     conf = ngx_http_get_module_loc_conf(r, ngx_http_preference_filter_module);
+    // if (!conf->enable) return ngx_http_next_body_filter(r, in);
+
+      chain_link = in;
+      //chain_link = ctx->data;
+
+
+     h = fopen( "/tmp/kk.txt", "a" );
+     fprintf(h, "\n\n\n\n==================================================\n");
+
+
+
+
+
+
+//    fprintf(h, "\n\n--------------------INIT CHAIN (max: %d - cur: %d )--------------------\n",
+//            chain_link->buf->end - chain_link->buf->start, chain_link->buf->last - chain_link->buf->pos);
+
+//    if (chain_link->buf->pos)
+//        fwrite(chain_link->buf->pos, chain_link->buf->last-chain_link->buf->pos, 1, h);
+
+  fprintf(h, "\n\n\n\n==================BEFORE FOR====================\n");
+    for ( ; ; ) {
+
+        fprintf(h,"\nchain_link->buf->pos: %s,chain_link->buf->last: %s,chain_link->buf->start: %s,chain_link->buf->end: %s, last buffer: %d \n",
+                chain_link->buf->pos,
+                chain_link->buf->last,
+                chain_link->buf->start,
+                chain_link->buf->end,
+                chain_link->buf->last_buf);
+
+
+        if (chain_link->buf->last_buf)       {
+            chain_contains_last_buffer = 1;
+
+        }
+        if (chain_link->next == NULL) {
+            break;
+        }
+        chain_link = chain_link->next;
+    }
+    fprintf(h, "\n\n\n\n==================AFTER FOR====================\n");
+
+//Now let's bail out if we don't have that last buffer:
+
+
+fclose(h);
+return ngx_http_next_body_filter(r, in);
+
+
+
+
+
+
+
+
+
+
+//    if (!chain_contains_last_buffer)   return ngx_http_next_body_filter(r, in);
+//fprintf(h, "\n\n\n\n==================AFTER last buffer recheck====================\n");
+
+//Super, now the last buffer is stored in chain_link. Now we allocate a new buffer:
+
+//ngx_buf_t    *b;
+//b = ngx_calloc_buf(r->pool);
+//if (b == NULL) {
+//    return NGX_ERROR;
+//}
+
+//And put some data in it:
+
+//b->pos = (u_char *) "<!-- Served by Nginx -->";
+//b->last = b->pos + sizeof("<!-- Served by Nginx -->") - 1;
+
+
+
+
+//And hook the buffer into a new chain link:
+
+//ngx_chain_t   *added_link;
+
+//added_link = ngx_alloc_chain_link(r->pool);
+//if (added_link == NULL)
+//    return NGX_ERROR;
+
+//added_link->buf = b;
+//added_link->next = NULL;
+
+//Finally, hook the new chain link to the final chain link we found before:
+
+//chain_link->next = added_link;
+
+//fprintf(h, "\n\n--------------------INIT CHAIN (max: %d - cur: %d )--------------------\n",
+//        chain_link->buf->end - chain_link->buf->start, chain_link->buf->last - chain_link->buf->pos);
+
+
+
+
+//if (chain_link->buf->pos)
+//    fwrite(chain_link->buf->pos, chain_link->buf->last-chain_link->buf->pos, 1, h);
+//if (added_link->buf->pos)
+//    fwrite(added_link->buf->pos, added_link->buf->last-added_link->buf->pos, 1, h);
+//if (b->pos)
+//    fwrite(b->pos, b->last-b->pos, 1, h);
+//And reset the "last_buf" variables to reflect reality:
+
+//chain_link->buf->last_buf = 0;
+//added_link->buf->last_buf = 1;
+
+
+//return ngx_http_next_body_filter(r, in);
+
+//And pass along the modified chain to the next output filter:
+}
+
+
+static ngx_int_t ngx_http_preference_filter_init(ngx_conf_t *cf);
+static ngx_int_t ngx_http_preference_filter_init(ngx_conf_t *cf){
+    ngx_http_next_header_filter = ngx_http_top_header_filter;
+    ngx_http_top_header_filter = ngx_http_preference_header_filter;
+
+    ngx_http_next_body_filter = ngx_http_top_body_filter;
+    ngx_http_top_body_filter = ngx_http_preference_body_filter;
+
+
+return NGX_OK;
+
+
+}
+
+
+static ngx_http_module_t  ngx_http_preference_filter_module_ctx = {
+        NULL,                                  /* preconfiguration */
+        ngx_http_preference_filter_init,           /* postconfiguration */
+        NULL,       /* create main configuration */
+        NULL,    /* init main configuration */
+        NULL,                                  /* create server configuration */
+        NULL,                                  /* merge server configuration */
+        ngx_http_preference_create_loc_conf,        /* create location configuration */
+        ngx_http_preference_merge_loc_conf          /* merge location configuration */
+
+};
+
+static void *ngx_http_preference_create_loc_conf(ngx_conf_t *cf){
+
+
+        ngx_http_preference_conf_t  *conf;
+        conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_preference_conf_t));
+        if (conf == NULL) {
+                return NULL;
+        }
+        conf->enable = NGX_CONF_UNSET;
+
+  //      conf->buffer_size = NGX_CONF_UNSET_SIZE;
+  //      conf->tmpls_check = NGX_CONF_UNSET;
+        return conf;
+}
+
+
+static char *ngx_http_preference_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
+{
+        ngx_http_preference_conf_t *prev = parent;
+        ngx_http_preference_conf_t *conf = child;
+
+
+        ngx_conf_merge_value(conf->enable, prev->enable, 0);
+
+
+
+
+
+        return NGX_CONF_OK;
+}
+
+
+
+ngx_module_t  ngx_http_preference_filter_module = {
+        NGX_MODULE_V1,
+        &ngx_http_preference_filter_module_ctx,     /* module context */
+        ngx_http_preference_filter_commands,        /* module directives */
+        NGX_HTTP_MODULE,                       /* module type */
+        NULL,                                  /* init master */
+        NULL,                                  /* init module */
+        NULL,                                  /* init process */
+        NULL,                                  /* init thread */
+        NULL,                                  /* exit thread */
+        NULL,                                  /* exit process */
+        NULL,                                  /* exit master */
+        NGX_MODULE_V1_PADDING
+};
